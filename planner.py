@@ -3,6 +3,7 @@ with open('Crafting.json') as f:
     Crafting = json.load(f)
 from collections import namedtuple
 from collections import defaultdict
+
 from heapq import heappush, heappop
 
 # List of items that can be in your inventory:
@@ -29,6 +30,29 @@ from heapq import heappush, heappop
 #	'Time': 1
 # }
 
+class State:
+
+    def __init__(self, inventory):
+        self.inventory = dict((el,0) for el in inventory)
+
+    def inventory_to_tuple(self, d):
+        return tuple(d.get(name, 0) for i, name in enumerate(self.inventory))
+
+    def __hash__(self):
+        h = frozenset(self.inventory.items())
+        return hash(h)
+
+    def __eq__(self,other):
+        pass
+
+    
+def make_goal_checker(goal):
+    # this code runs once
+    def is_goal(state):
+        # this code runs millions of times
+        return True # or False
+
+    return is_goal
 
 
 def make_checker(rule):
@@ -49,6 +73,9 @@ def make_effector(rule):
         return state
 
     return effect
+
+def heuristic():
+    return 0
 
 def graph(state):
   for r in all_recipes:
@@ -96,25 +123,10 @@ for name, rule in Crafting['Recipes'].items():
 
 
 
-def build_graph():
-    
-    pass
 
-class Planner:
-    def __init__(self):
-        self.inventory = dict((el, 0) for el in Crafting["Items"])
-        
-        pass
+initial_state = State(Crafting["Items"])
+is_goal = make_goal_checker(Crafting["Goal"])
+t_heuristic = heuristic()
+t_limit = 30
 
-    def get_costs(self, name):
-
-        pass
-
-    def add_to_inventory(self, itemName):
-        pass
-
-    def x(self):
-        pass
-
-planner = Planner()
-
+print search(graph, initial_state, is_goal, t_limit,  t_heuristic)
