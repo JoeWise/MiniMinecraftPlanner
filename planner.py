@@ -32,12 +32,13 @@ from heapq import heappush, heappop
 
 class State:
 
-    def __init__(self, inventory):
+    def __init__(self, inventory, state=None):
         self.inventory = dict((el,0) for el in inventory)
+        if (state is not None): self.inventory = state.inventory
 
     def __hash__(self):
-        h = frozenset(self.inventory.items())
-        return hash(h)
+        h = frozenset(self.inventory.items()).__hash__()
+        return h
 
     def __eq__(self,other):
         pass
@@ -72,8 +73,8 @@ def make_checker(rule):
         satisfiesConsumes = True
         satisifiesRequires = True
         if 'Consumes' in rule.keys():
-            satisfiesConsumes = state.has_items(rule["Consumes"])
-           
+            #satisfiesConsumes = state.has_items(rule["Consumes"])
+            pass
 
         if 'Produces' in rule.keys():
             
@@ -84,8 +85,8 @@ def make_checker(rule):
         #print rule
         # this code runs millions of times
 
-        return (satisfiesConsumes and satisifiesRequires) # or False
-
+        #return (satisfiesConsumes and satisifiesRequires) # or False
+        return True
     return check
 
 def make_effector(rule):
@@ -94,7 +95,14 @@ def make_effector(rule):
     def effect(state):
         # this code runs millions of times
         #return next_state
-        return state
+        newState = State({}, state)
+        for item in rule["Consumes"]:
+            newState.inventory[item] -= rule["Consumes"][item]
+
+        for item in rule["Produces"]:
+            newState.inventory[item] += rule["Produces"][item]
+
+        return newState
 
     return effect
 
@@ -111,10 +119,12 @@ for name, rule in Crafting['Recipes'].items():
     all_recipes.append(recipe)
 
 def graph(state):
+  print "Graph called"
 
   for r in all_recipes:
     if r.check(state):
       yield (r.name, r.effect(state), r.cost)
+
 
 def search(graph, initial, is_goal, limit, heuristic):
 
@@ -126,8 +136,10 @@ def search(graph, initial, is_goal, limit, heuristic):
 
     q = [(0, initial)]
     while q:
-        node = heappop(q)
 
+        node = heappop(q)
+        print "I: ", initial
+        print "I2: ", node[1]
         if node[0] > limit:
             return float('inf'), []
 
@@ -150,12 +162,15 @@ def search(graph, initial, is_goal, limit, heuristic):
 
         #print(str(node))
         #print(node[1])
-        for next_node in graph(node[1]):
+
+        for next_node in neighbors:
+            print "NN:", next_node[0]
             if next_node[1] in closed_set:
                 continue
 
             action, next_state, cost = next_node
-
+            print "N1: ", action
+            print "TIMES: ", times
             cost_to_next_node = times[node[1]] + cost
 
             if next_state not in q or cost_to_next_node < times[next_state]:
