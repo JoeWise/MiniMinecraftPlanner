@@ -86,32 +86,43 @@ def search(graph, initial, is_goal, limit, heuristic):
 
     prev = {initial: None}
     actions = {initial: None}
-    times = {initial: None}
+    times = {initial: 0}
+    closed_set = []
 
     q = [(0, initial)]
     while q:
         node = heappop(q)
+        closed_set.append(node[1])
 
         if is_goal(node[1]):
             plan = []
             total_cost = 0
             check_node = node[1]
+            total_cost = times[check_node]
             while check_node:
                 if prev[check_node]:
                     plan.append(actions[check_node])
-                    total_cost += times[check_node]
                 check_node = prev[check_node]
             plan.reverse()
             return total_cost, plan
 
-        # neighbors is a list of tuples (action, cost, next_state)
+        # neighbors is a list of tuples (action, next_state, cost)
         neighbors = graph(node[1])
-        for next_node in neighbors:
-            if next_node not in prev:
+        print(str(node))
+        print(node[1])
+        for next_node in graph(node[1]):
+            if next_node[1] in closed_set:
+                continue
 
-                h_value = heuristic(node[1]) + next_node[2]
-                if h_value < heuristic(next_node[3]):
-                    pass
+            action, next_state, cost = next_node
+
+            cost_to_next_node = times[node[1]] + cost
+
+            if next_state not in q or cost_to_next_node < times[next_state]:
+                prev[next_state] = node[1]
+                actions[next_state] = action
+                times[next_state] = cost + times[node[1]]
+                heappush(q, (heuristic(next_state) + cost_to_next_node, next_state))
 
 Recipe = namedtuple('Recipe',['name','check','effect','cost'])
 all_recipes = []
