@@ -2,29 +2,33 @@ import json
 with open('Crafting.json') as f:
     Crafting = json.load(f)
 from collections import namedtuple
+from collections import defaultdict
 from heapq import heappush, heappop
 
 # List of items that can be in your inventory:
-print Crafting['Items']
+#print "Item: ", Crafting['Items']
 # example: ['bench', 'cart', ..., 'wood', 'wooden_axe', 'wooden_pickaxe']
 
 # List of items in your initial inventory with amounts:
-print Crafting['Initial']
+#print "Initial: ", Crafting['Initial']
 # {'coal': 4, 'plank': 1}
 
 # List of items needed to be in your inventory at the end of the plan:
 # (okay to have more than this; some might be satisfied by initial inventory)
-print Crafting['Goal']
+#print "Goal: ", Crafting['Goal']
+#print Crafting['Goal']
 # {'stone_pickaxe': 2}
 
 # Dict of crafting recipes (each is a dict):
-print Crafting['Recipes']['craft stone_pickaxe at bench']
+#print "Recipes: ", Crafting["Recipes"]["craft stone_pickaxe at bench"]
+#print Crafting['Recipes']['craft stone_pickaxe at bench']
 # example:
 # {	'Produces': {'stone_pickaxe': 1},
 #	'Requires': {'bench': True},
 #	'Consumes': {'cobble': 3, 'stick': 2},
 #	'Time': 1
 # }
+
 
 
 def make_checker(rule):
@@ -84,8 +88,33 @@ def search(graph, initial, is_goal, limit, heuristic):
 
 Recipe = namedtuple('Recipe',['name','check','effect','cost'])
 all_recipes = []
-for name, rule in Crafting['Recipes'].items:
+for name, rule in Crafting['Recipes'].items():
     checker = make_checker(rule)
     effector = make_effector(rule)
     recipe = Recipe(name, checker, effector, rule['Time'])
     all_recipes.append(recipe)
+
+
+
+def build_graph():
+    
+    pass
+
+class Planner:
+    def __init__(self):
+        self.inventory = dict((el, 0) for el in Crafting["Items"])
+        
+        pass
+
+    def get_costs(self, name):
+
+        pass
+
+    def add_to_inventory(self, itemName):
+        pass
+
+    def x(self):
+        pass
+
+planner = Planner()
+
