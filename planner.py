@@ -35,9 +35,6 @@ class State:
     def __init__(self, inventory):
         self.inventory = dict((el,0) for el in inventory)
 
-    def inventory_to_tuple(self, d):
-        return tuple(d.get(name, 0) for i, name in enumerate(self.inventory))
-
     def __hash__(self):
         h = frozenset(self.inventory.items())
         return hash(h)
@@ -45,12 +42,25 @@ class State:
     def __eq__(self,other):
         pass
 
+    def has_items(self, goals):
+        has_item = True
+        
+        for item in goals:
+            if (self.inventory[item] < goals[item]):
+                has_item = False
+                break
+            else:
+                print "HAS A GOAL: ", item
+
+        return has_item
+
     
-def make_goal_checker(goal):
+def make_goal_checker(goals):
     # this code runs once
-    def is_goal(state):
+    def is_goal(state, goals):
         # this code runs millions of times
-        return True # or False
+        return state.has_items(goals)
+        #return True # or False
 
     return is_goal
 
@@ -59,8 +69,22 @@ def make_checker(rule):
     # this code runs once
     # do something with rule['Consumes'] and rule['Requires']
     def check(state):
+        satisfiesConsumes = True
+        satisifiesRequires = True
+        if 'Consumes' in rule.keys():
+            satisfiesConsumes = state.has_items(rule["Consumes"])
+           
+
+        if 'Produces' in rule.keys():
+            
+            pass
+
+        if 'Requires' in rule.keys():
+            pass
+        #print rule
         # this code runs millions of times
-        return True # or False
+
+        return (satisfiesConsumes and satisifiesRequires) # or False
 
     return check
 
@@ -77,7 +101,17 @@ def make_effector(rule):
 def heuristic():
     return 0
 
+
+Recipe = namedtuple('Recipe',['name','check','effect','cost'])
+all_recipes = []
+for name, rule in Crafting['Recipes'].items():
+    checker = make_checker(rule)
+    effector = make_effector(rule)
+    recipe = Recipe(name, checker, effector, rule['Time'])
+    all_recipes.append(recipe)
+
 def graph(state):
+
   for r in all_recipes:
     if r.check(state):
       yield (r.name, r.effect(state), r.cost)
@@ -93,8 +127,8 @@ def search(graph, initial, is_goal, limit, heuristic):
     while q:
         node = heappop(q)
         closed_set.append(node[1])
-
-        if is_goal(node[1]):
+        print "N: "
+        if is_goal(node[1], Crafting["Goal"]):
             plan = []
             total_cost = 0
             check_node = node[1]
@@ -108,8 +142,9 @@ def search(graph, initial, is_goal, limit, heuristic):
 
         # neighbors is a list of tuples (action, next_state, cost)
         neighbors = graph(node[1])
-        print(str(node))
-        print(node[1])
+
+        #print(str(node))
+        #print(node[1])
         for next_node in graph(node[1]):
             if next_node[1] in closed_set:
                 continue
@@ -124,15 +159,6 @@ def search(graph, initial, is_goal, limit, heuristic):
                 times[next_state] = cost + times[node[1]]
                 heappush(q, (heuristic(next_state) + cost_to_next_node, next_state))
 
-Recipe = namedtuple('Recipe',['name','check','effect','cost'])
-all_recipes = []
-for name, rule in Crafting['Recipes'].items():
-    checker = make_checker(rule)
-    effector = make_effector(rule)
-    recipe = Recipe(name, checker, effector, rule['Time'])
-    all_recipes.append(recipe)
-
-
 
 
 initial_state = State(Crafting["Items"])
@@ -140,4 +166,4 @@ is_goal = make_goal_checker(Crafting["Goal"])
 t_heuristic = heuristic()
 t_limit = 30
 
-print search(graph, initial_state, is_goal, t_limit,  t_heuristic)
+print "SEARCH: ", search(graph, initial_state, is_goal, t_limit, t_heuristic)
