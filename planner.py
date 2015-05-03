@@ -53,6 +53,7 @@ def graph(state):
 
 def search(graph, initial, is_goal, limit, heuristic):
 
+
     prev = {initial: None}
     actions = {initial: None}
     times = {initial: 0}
@@ -61,6 +62,10 @@ def search(graph, initial, is_goal, limit, heuristic):
     q = [(0, initial)]
     while q:
         node = heappop(q)
+
+        if node[0] > limit:
+            return float('inf'), []
+
         closed_set.append(node[1])
 
         if is_goal(node[1]):
